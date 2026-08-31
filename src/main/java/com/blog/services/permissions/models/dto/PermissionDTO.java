@@ -1,17 +1,19 @@
-package com.blog.services.roles.models.dto;
+package com.blog.services.permissions.models.dto;
 
 import java.io.Serializable;
 
 /**
- * 角色DTO
+ * 权限DTO
  */
-public class RoleDTO implements Serializable {
+public class PermissionDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private Long id;
-    private String roleName;
-    private String roleCode;
+    private String permissionName;
+    private String permissionCode;
+    private String resourceType;
+    private String resourcePath;
     private String description;
     private Integer status;
     private Long createTime;
@@ -25,20 +27,36 @@ public class RoleDTO implements Serializable {
         this.id = id;
     }
 
-    public String getRoleName() {
-        return roleName;
+    public String getPermissionName() {
+        return permissionName;
     }
 
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
+    public void setPermissionName(String permissionName) {
+        this.permissionName = permissionName;
     }
 
-    public String getRoleCode() {
-        return roleCode;
+    public String getPermissionCode() {
+        return permissionCode;
     }
 
-    public void setRoleCode(String roleCode) {
-        this.roleCode = roleCode;
+    public void setPermissionCode(String permissionCode) {
+        this.permissionCode = permissionCode;
+    }
+
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
+    }
+
+    public String getResourcePath() {
+        return resourcePath;
+    }
+
+    public void setResourcePath(String resourcePath) {
+        this.resourcePath = resourcePath;
     }
 
     public String getDescription() {

@@ -1,18 +1,13 @@
-package com.blog.services.users.models;
+package com.blog.services.users.models.vo;
 
 import java.io.Serializable;
 
 /**
- * 用户实体类
+ * 创建/更新用户请求VO
  */
-public class User implements Serializable {
+public class UserVO implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    /**
-     * 用户ID
-     */
-    private Long id;
 
     /**
      * 用户名
@@ -38,29 +33,6 @@ public class User implements Serializable {
      * 头像
      */
     private String avatar;
-
-    /**
-     * 状态：1-正常，0-禁用
-     */
-    private Integer status;
-
-    /**
-     * 创建时间
-     */
-    private Long createTime;
-
-    /**
-     * 更新时间
-     */
-    private Long updateTime;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getUsername() {
         return username;
@@ -100,29 +72,5 @@ public class User implements Serializable {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public Long getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(Long createTime) {
-        this.createTime = createTime;
-    }
-
-    public Long getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(Long updateTime) {
-        this.updateTime = updateTime;
     }
 }
