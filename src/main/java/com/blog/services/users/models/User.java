@@ -1,10 +1,14 @@
 package com.blog.services.users.models;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
  * 用户实体类
  */
+@TableName("user")
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -12,6 +16,7 @@ public class User implements Serializable {
     /**
      * 用户ID
      */
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**

@@ -1,0 +1,509 @@
+{
+  "info": {
+    "name": "创建角色 & 分配权限",
+    "_postman_id": "role-permission-test",
+    "description": "聚焦测试：创建角色 + 给角色分配权限。\n\n## 使用说明\n1. 设置环境变量 `baseUrl`（默认 http://localhost:8080）\n2. 先执行【数据准备】创建权限并提取 permissionId\n3. 再执行【创建角色】提取 roleId\n4. 最后执行【分配权限】并验证",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" },
+    { "key": "roleId", "value": "", "type": "string" },
+    { "key": "permissionId1", "value": "", "type": "string" },
+    { "key": "permissionId2", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "数据准备-创建权限",
+      "description": "创建两个权限供后续分配给角色，脚本自动提取 ID",
+      "item": [
+        {
+          "name": "创建权限1-文章查看",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('创建成功', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(200);",
+                  "    pm.expect(json.data.id).to.be.above(0);",
+                  "    pm.environment.set('permissionId1', json.data.id);",
+                  "    console.log('permissionId1 = ' + json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/permissions", "host": ["{{baseUrl}}"], "path": ["api", "permissions"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionName\": \"文章查看\",\n  \"permissionCode\": \"article:view\",\n  \"resourceType\": \"API\",\n  \"resourcePath\": \"/api/articles/**\",\n  \"description\": \"查看文章权限\"\n}"
+            }
+          }
+        },
+        {
+          "name": "创建权限2-文章发布",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('创建成功', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(200);",
+                  "    pm.environment.set('permissionId2', json.data.id);",
+                  "    console.log('permissionId2 = ' + json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/permissions", "host": ["{{baseUrl}}"], "path": ["api", "permissions"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionName\": \"文章发布\",\n  \"permissionCode\": \"article:publish\",\n  \"resourceType\": \"API\",\n  \"resourcePath\": \"/api/articles/publish\",\n  \"description\": \"发布文章权限\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "创建角色",
+      "description": "角色创建正常流程与异常边界",
+      "item": [
+        {
+          "name": "正常-创建管理员角色",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('创建成功', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(200);",
+                  "    pm.expect(json.message).to.include('成功');",
+                  "    pm.expect(json.data.id).to.be.above(0);",
+                  "    pm.expect(json.data.roleName).to.eql('管理员');",
+                  "    pm.expect(json.data.roleCode).to.eql('ROLE_ADMIN');",
+                  "    pm.expect(json.data.status).to.eql(1);",
+                  "    pm.environment.set('roleId', json.data.id);",
+                  "    console.log('roleId = ' + json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles", "host": ["{{baseUrl}}"], "path": ["api", "roles"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleName\": \"管理员\",\n  \"roleCode\": \"ROLE_ADMIN\",\n  \"description\": \"系统管理员角色\"\n}"
+            }
+          }
+        },
+        {
+          "name": "异常-角色名称为空",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('返回400', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(400);",
+                  "    pm.expect(json.message).to.include('角色名称');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles", "host": ["{{baseUrl}}"], "path": ["api", "roles"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleName\": \"\",\n  \"roleCode\": \"ROLE_TEST\",\n  \"description\": \"测试\"\n}"
+            }
+          }
+        },
+        {
+          "name": "异常-角色编码为空",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('返回400', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(400);",
+                  "    pm.expect(json.message).to.include('角色编码');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles", "host": ["{{baseUrl}}"], "path": ["api", "roles"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleName\": \"测试角色\",\n  \"roleCode\": \"\",\n  \"description\": \"测试\"\n}"
+            }
+          }
+        },
+        {
+          "name": "异常-请求体为空",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('返回400', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(400);",
+                  "    pm.expect(json.message).to.include('不能为空');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles", "host": ["{{baseUrl}}"], "path": ["api", "roles"] },
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "验证-查询刚创建的角色",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('角色存在且字段正确', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(200);",
+                  "    pm.expect(json.data.id).to.eql(Number(pm.environment.get('roleId')));",
+                  "    pm.expect(json.data.roleName).to.eql('管理员');",
+                  "    pm.expect(json.data.roleCode).to.eql('ROLE_ADMIN');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/roles/{{roleId}}", "host": ["{{baseUrl}}"], "path": ["api", "roles", "{{roleId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "给角色分配权限",
+      "description": "权限分配正常流程、验证与异常边界",
+      "item": [
+        {
+          "name": "正常-批量分配权限给角色",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('分配成功', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(200);",
+                  "    pm.expect(json.message).to.include('成功');",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "    pm.expect(json.data.length).to.eql(2);",
+                  "    var codes = json.data.map(function(p){ return p.permissionCode; });",
+                  "    pm.expect(codes).to.include('article:view');",
+                  "    pm.expect(codes).to.include('article:publish');",
+                  "    console.log('已分配权限数: ' + json.data.length);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles/{{roleId}}/permissions", "host": ["{{baseUrl}}"], "path": ["api", "roles", "{{roleId}}", "permissions"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [{{permissionId1}}, {{permissionId2}}]\n}"
+            }
+          }
+        },
+        {
+          "name": "验证-查询角色权限列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('返回2个权限', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(200);",
+                  "    pm.expect(json.data.length).to.eql(2);",
+                  "    var ids = json.data.map(function(p){ return p.id; });",
+                  "    pm.expect(ids).to.include(Number(pm.environment.get('permissionId1')));",
+                  "    pm.expect(ids).to.include(Number(pm.environment.get('permissionId2')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/roles/{{roleId}}/permissions", "host": ["{{baseUrl}}"], "path": ["api", "roles", "{{roleId}}", "permissions"] }
+          }
+        },
+        {
+          "name": "正常-重复分配（幂等，不重复添加）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('仍为2个权限不重复', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(200);",
+                  "    pm.expect(json.data.length).to.eql(2);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles/{{roleId}}/permissions", "host": ["{{baseUrl}}"], "path": ["api", "roles", "{{roleId}}", "permissions"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [{{permissionId1}}]\n}"
+            }
+          }
+        },
+        {
+          "name": "正常-分配单个权限",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('分配成功', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(200);",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles/{{roleId}}/permissions", "host": ["{{baseUrl}}"], "path": ["api", "roles", "{{roleId}}", "permissions"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [{{permissionId2}}]\n}"
+            }
+          }
+        },
+        {
+          "name": "异常-角色不存在",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('返回404', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(404);",
+                  "    pm.expect(json.message).to.include('角色不存在');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles/999999/permissions", "host": ["{{baseUrl}}"], "path": ["api", "roles", "999999", "permissions"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [{{permissionId1}}]\n}"
+            }
+          }
+        },
+        {
+          "name": "异常-permissionIds为空",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('返回400', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(400);",
+                  "    pm.expect(json.message).to.include('不能为空');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles/{{roleId}}/permissions", "host": ["{{baseUrl}}"], "path": ["api", "roles", "{{roleId}}", "permissions"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": []\n}"
+            }
+          }
+        },
+        {
+          "name": "异常-请求体为空",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('返回400', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(400);",
+                  "    pm.expect(json.message).to.include('不能为空');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles/{{roleId}}/permissions", "host": ["{{baseUrl}}"], "path": ["api", "roles", "{{roleId}}", "permissions"] },
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "边界-包含不存在的permissionId(自动过滤)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('过滤后仍成功', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(200);",
+                  "    var ids = json.data.map(function(p){ return p.id; });",
+                  "    pm.expect(ids).to.not.include(999999);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/roles/{{roleId}}/permissions", "host": ["{{baseUrl}}"], "path": ["api", "roles", "{{roleId}}", "permissions"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [{{permissionId1}}, 999999]\n}"
+            }
+          }
+        },
+        {
+          "name": "正常-移除角色的单个权限",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('移除成功', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(200);",
+                  "    pm.expect(json.message).to.include('成功');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/roles/{{roleId}}/permissions/{{permissionId2}}", "host": ["{{baseUrl}}"], "path": ["api", "roles", "{{roleId}}", "permissions", "{{permissionId2}}"] }
+          }
+        },
+        {
+          "name": "验证-移除后权限列表应剩1个",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('返回1个权限', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.length).to.eql(1);",
+                  "    pm.expect(json.data[0].id).to.eql(Number(pm.environment.get('permissionId1')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/roles/{{roleId}}/permissions", "host": ["{{baseUrl}}"], "path": ["api", "roles", "{{roleId}}", "permissions"] }
+          }
+        }
+      ]
+    }
+  ]
+}

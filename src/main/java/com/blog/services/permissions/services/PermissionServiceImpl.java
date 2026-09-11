@@ -1,15 +1,14 @@
 package com.blog.services.permissions.services;
 
+import com.blog.services.permissions.mappers.PermissionMapper;
 import com.blog.services.permissions.models.Permission;
 import com.blog.services.permissions.models.dto.PermissionDTO;
 import com.blog.services.permissions.models.vo.PermissionVO;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 权限服务实现类
@@ -17,13 +16,12 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class PermissionServiceImpl implements PermissionService {
 
-    private final Map<Long, Permission> permissionRepository = new ConcurrentHashMap<>();
-    private final AtomicLong idGenerator = new AtomicLong(1);
+    @Resource
+    private PermissionMapper permissionMapper;
 
     @Override
     public PermissionDTO createPermission(PermissionVO vo) {
         Permission permission = new Permission();
-        permission.setId(idGenerator.getAndIncrement());
         permission.setPermissionName(vo.getPermissionName());
         permission.setPermissionCode(vo.getPermissionCode());
         permission.setResourceType(vo.getResourceType());
@@ -32,20 +30,20 @@ public class PermissionServiceImpl implements PermissionService {
         permission.setStatus(1);
         permission.setCreateTime(System.currentTimeMillis());
         permission.setUpdateTime(System.currentTimeMillis());
-        permissionRepository.put(permission.getId(), permission);
+        permissionMapper.insert(permission);
         return convertToDTO(permission);
     }
 
     @Override
     public PermissionDTO getPermissionById(Long id) {
-        Permission permission = permissionRepository.get(id);
+        Permission permission = permissionMapper.selectById(id);
         return permission != null ? convertToDTO(permission) : null;
     }
 
     @Override
     public List<PermissionDTO> listPermissions() {
         List<PermissionDTO> result = new ArrayList<>();
-        for (Permission permission : permissionRepository.values()) {
+        for (Permission permission : permissionMapper.selectList(null)) {
             result.add(convertToDTO(permission));
         }
         return result;
@@ -53,7 +51,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public PermissionDTO updatePermission(Long id, PermissionVO vo) {
-        Permission permission = permissionRepository.get(id);
+        Permission permission = permissionMapper.selectById(id);
         if (permission == null) {
             return null;
         }
@@ -73,12 +71,13 @@ public class PermissionServiceImpl implements PermissionService {
             permission.setDescription(vo.getDescription());
         }
         permission.setUpdateTime(System.currentTimeMillis());
+        permissionMapper.updateById(permission);
         return convertToDTO(permission);
     }
 
     @Override
     public void deletePermission(Long id) {
-        permissionRepository.remove(id);
+        permissionMapper.deleteById(id);
     }
 
     private PermissionDTO convertToDTO(Permission permission) {

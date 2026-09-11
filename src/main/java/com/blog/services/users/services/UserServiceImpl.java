@@ -1,15 +1,14 @@
 package com.blog.services.users.services;
 
+import com.blog.services.users.mappers.UserMapper;
 import com.blog.services.users.models.User;
 import com.blog.services.users.models.dto.UserDTO;
 import com.blog.services.users.models.vo.UserVO;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 用户服务实现类
@@ -17,16 +16,12 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class UserServiceImpl implements UserService {
 
-    /**
-     * 模拟存储（后续替换为MyBatis Mapper）
-     */
-    private final Map<Long, User> userRepository = new ConcurrentHashMap<>();
-    private final AtomicLong idGenerator = new AtomicLong(1);
+    @Resource
+    private UserMapper userMapper;
 
     @Override
     public UserDTO createUser(UserVO vo) {
         User user = new User();
-        user.setId(idGenerator.getAndIncrement());
         user.setUsername(vo.getUsername());
         user.setPassword(vo.getPassword());
         user.setEmail(vo.getEmail());
@@ -35,13 +30,13 @@ public class UserServiceImpl implements UserService {
         user.setStatus(1);
         user.setCreateTime(System.currentTimeMillis());
         user.setUpdateTime(System.currentTimeMillis());
-        userRepository.put(user.getId(), user);
+        userMapper.insert(user);
         return convertToDTO(user);
     }
 
     @Override
     public UserDTO getUserById(Long id) {
-        User user = userRepository.get(id);
+        User user = userMapper.selectById(id);
         if (user == null) {
             return null;
         }
@@ -51,7 +46,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDTO> listUsers() {
         List<UserDTO> result = new ArrayList<>();
-        for (User user : userRepository.values()) {
+        for (User user : userMapper.selectList(null)) {
             result.add(convertToDTO(user));
         }
         return result;
@@ -59,7 +54,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO updateUser(Long id, UserVO vo) {
-        User user = userRepository.get(id);
+        User user = userMapper.selectById(id);
         if (user == null) {
             return null;
         }
@@ -79,12 +74,13 @@ public class UserServiceImpl implements UserService {
             user.setAvatar(vo.getAvatar());
         }
         user.setUpdateTime(System.currentTimeMillis());
+        userMapper.updateById(user);
         return convertToDTO(user);
     }
 
     @Override
     public void deleteUser(Long id) {
-        userRepository.remove(id);
+        userMapper.deleteById(id);
     }
 
     /**
